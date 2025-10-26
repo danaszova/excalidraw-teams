@@ -1,5 +1,5 @@
 import { Cog6ToothIcon } from '@heroicons/react/24/outline'
-import { useAuthStore } from '../lib/auth-store'
+import { useAuthStore } from '@/lib/auth-store'
 
 export default function Settings() {
   const { user } = useAuthStore()

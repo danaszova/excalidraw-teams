@@ -19,55 +19,41 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       token: null,
       isAuthenticated: false,
       
       login: async (email: string, password: string) => {
-        try {
-          // TODO: Replace with actual API call
-          const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          })
-          
-          if (!response.ok) {
-            throw new Error('Login failed')
-          }
-          
-          const { user, token } = await response.json()
-          set({ user, token, isAuthenticated: true })
-        } catch (error) {
-          // For development, allow any login
-          console.warn('Using development auth bypass')
-          const mockUser = { id: '1', email, name: email.split('@')[0] }
-          set({ user: mockUser, token: 'dev-token', isAuthenticated: true })
+        const response = await fetch('http://localhost:3001/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Login failed')
         }
+        
+        const { user, token } = await response.json()
+        set({ user, token, isAuthenticated: true })
       },
       
       register: async (name: string, email: string, password: string) => {
-        try {
-          // TODO: Replace with actual API call
-          const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password }),
-          })
-          
-          if (!response.ok) {
-            throw new Error('Registration failed')
-          }
-          
-          const { user, token } = await response.json()
-          set({ user, token, isAuthenticated: true })
-        } catch (error) {
-          // For development, allow any registration
-          console.warn('Using development auth bypass')
-          const mockUser = { id: '1', email, name }
-          set({ user: mockUser, token: 'dev-token', isAuthenticated: true })
+        const response = await fetch('http://localhost:3001/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password }),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Registration failed')
         }
+        
+        const { user, token } = await response.json()
+        set({ user, token, isAuthenticated: true })
       },
       
       logout: () => {

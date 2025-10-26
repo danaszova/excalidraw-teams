@@ -1,13 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import Layout from './components/Layout/Layout'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import Whiteboard from './pages/Whiteboard'
-import Projects from './pages/Projects'
-import Team from './pages/Team'
-import Settings from './pages/Settings'
-import { useAuthStore } from './lib/auth-store'
+import Layout from '@/components/Layout/Layout'
+import Login from '@/pages/Login'
+import Dashboard from '@/pages/Dashboard'
+import Whiteboard from '@/pages/Whiteboard'
+import Projects from '@/pages/Projects'
+import Team from '@/pages/Team'
+import Settings from '@/pages/Settings'
+import { useAuthStore } from '@/lib/auth-store'
 
 function App() {
   const { isAuthenticated } = useAuthStore()

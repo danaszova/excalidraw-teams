@@ -1,152 +1,194 @@
 import express from 'express'
 import { z } from 'zod'
+import { WhiteboardModel } from '../models/Whiteboard'
+import { authenticateToken, AuthRequest, optionalAuth } from '../middleware/auth'
 
 const router = express.Router()
 
 // Validation schemas
 const createWhiteboardSchema = z.object({
-  title: z.string().min(1),
-  sceneData: z.object({}).optional()
+  title: z.string().min(1, 'Title is required'),
+  scene_data: z.any().optional(),
+  is_public: z.boolean().optional()
 })
 
 const updateWhiteboardSchema = z.object({
   title: z.string().min(1).optional(),
-  sceneData: z.object({}).optional()
+  is_public: z.boolean().optional()
 })
 
-// Mock whiteboard storage (replace with actual database later)
-const whiteboards: Array<{
-  id: string
-  title: string
-  sceneId: string
-  ownerId: string
-  createdAt: Date
-  updatedAt: Date
-  isPublic: boolean
-}> = []
-
-// Get all whiteboards
-router.get('/', (req, res) => {
-  // TODO: Add authentication middleware to get user ID
-  // TODO: Filter by user permissions
-  res.json({
-    whiteboards: whiteboards.map(wb => ({
-      id: wb.id,
-      title: wb.title,
-      sceneId: wb.sceneId,
-      createdAt: wb.createdAt,
-      updatedAt: wb.updatedAt,
-      isPublic: wb.isPublic
-    }))
-  })
+const updateSceneSchema = z.object({
+  scene_data: z.any()
 })
 
-// Get specific whiteboard
-router.get('/:id', (req, res) => {
-  const { id } = req.params
-  const whiteboard = whiteboards.find(wb => wb.id === id)
-  
-  if (!whiteboard) {
-    return res.status(404).json({ error: 'Whiteboard not found' })
+// Get user's whiteboards
+router.get('/', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const whiteboards = await WhiteboardModel.findByOwner(req.user!.id)
+    
+    res.json({
+      whiteboards: whiteboards.map(wb => ({
+        id: wb.id,
+        title: wb.title,
+        scene_id: wb.scene_id,
+        owner_id: wb.owner_id,
+        is_public: wb.is_public,
+        created_at: wb.created_at,
+        updated_at: wb.updated_at
+      }))
+    })
+  } catch (error) {
+    console.error('Error fetching whiteboards:', error)
+    res.status(500).json({ error: 'Failed to fetch whiteboards' })
   }
-  
-  // TODO: Check permissions
-  res.json({
-    id: whiteboard.id,
-    title: whiteboard.title,
-    sceneId: whiteboard.sceneId,
-    createdAt: whiteboard.createdAt,
-    updatedAt: whiteboard.updatedAt,
-    isPublic: whiteboard.isPublic
-  })
+})
+
+// Get specific whiteboard with scene data
+router.get('/:id', optionalAuth, async (req: AuthRequest, res) => {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid whiteboard ID' })
+    }
+
+    // Check access permissions
+    if (req.user) {
+      const hasAccess = await WhiteboardModel.checkAccess(id, req.user.id)
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'Access denied' })
+      }
+    } else {
+      // For non-authenticated users, only allow public whiteboards
+      const whiteboard = await WhiteboardModel.findById(id)
+      if (!whiteboard || !whiteboard.is_public) {
+        return res.status(403).json({ error: 'Access denied' })
+      }
+    }
+
+    const whiteboard = await WhiteboardModel.findById(id, true)
+    if (!whiteboard) {
+      return res.status(404).json({ error: 'Whiteboard not found' })
+    }
+
+    res.json(whiteboard)
+  } catch (error) {
+    console.error('Error fetching whiteboard:', error)
+    res.status(500).json({ error: 'Failed to fetch whiteboard' })
+  }
 })
 
 // Create new whiteboard
-router.post('/', (req, res) => {
+router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { title, sceneData } = createWhiteboardSchema.parse(req.body)
+    const validatedData = createWhiteboardSchema.parse(req.body)
     
-    // TODO: Get user ID from authentication middleware
-    const mockUserId = 'user-1'
-    
-    const whiteboard = {
-      id: Math.random().toString(36).substr(2, 9),
-      title,
-      sceneId: Math.random().toString(36).substr(2, 9), // This should be saved to MongoDB
-      ownerId: mockUserId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      isPublic: false
-    }
-    
-    whiteboards.push(whiteboard)
-    
-    res.status(201).json({
-      id: whiteboard.id,
-      title: whiteboard.title,
-      sceneId: whiteboard.sceneId,
-      createdAt: whiteboard.createdAt,
-      updatedAt: whiteboard.updatedAt,
-      isPublic: whiteboard.isPublic
+    const whiteboard = await WhiteboardModel.create({
+      title: validatedData.title,
+      owner_id: req.user!.id,
+      scene_data: validatedData.scene_data,
+      is_public: validatedData.is_public || false
     })
+    
+    res.status(201).json(whiteboard)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid input', details: error.errors })
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
+      })
     }
+    console.error('Error creating whiteboard:', error)
     res.status(500).json({ error: 'Failed to create whiteboard' })
   }
 })
 
-// Update whiteboard
-router.put('/:id', (req, res) => {
+// Update whiteboard metadata
+router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid whiteboard ID' })
+    }
+
     const updates = updateWhiteboardSchema.parse(req.body)
     
-    const whiteboardIndex = whiteboards.findIndex(wb => wb.id === id)
-    if (whiteboardIndex === -1) {
+    // Check ownership
+    const existing = await WhiteboardModel.findById(id)
+    if (!existing || existing.owner_id !== req.user!.id) {
       return res.status(404).json({ error: 'Whiteboard not found' })
     }
     
-    // TODO: Check ownership/permissions
-    
-    const whiteboard = whiteboards[whiteboardIndex]
-    if (updates.title) {
-      whiteboard.title = updates.title
-    }
-    whiteboard.updatedAt = new Date()
-    
-    whiteboards[whiteboardIndex] = whiteboard
-    
-    res.json({
-      id: whiteboard.id,
-      title: whiteboard.title,
-      sceneId: whiteboard.sceneId,
-      createdAt: whiteboard.createdAt,
-      updatedAt: whiteboard.updatedAt,
-      isPublic: whiteboard.isPublic
-    })
+    const whiteboard = await WhiteboardModel.update(id, updates)
+    res.json(whiteboard)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid input', details: error.errors })
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
+      })
     }
+    console.error('Error updating whiteboard:', error)
     res.status(500).json({ error: 'Failed to update whiteboard' })
   }
 })
 
-// Delete whiteboard
-router.delete('/:id', (req, res) => {
-  const { id } = req.params
-  const whiteboardIndex = whiteboards.findIndex(wb => wb.id === id)
-  
-  if (whiteboardIndex === -1) {
-    return res.status(404).json({ error: 'Whiteboard not found' })
+// Update whiteboard scene data
+router.put('/:id/scene', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid whiteboard ID' })
+    }
+
+    const { scene_data } = updateSceneSchema.parse(req.body)
+    
+    // Check ownership
+    const whiteboard = await WhiteboardModel.findById(id)
+    if (!whiteboard || whiteboard.owner_id !== req.user!.id) {
+      return res.status(404).json({ error: 'Whiteboard not found' })
+    }
+    
+    await WhiteboardModel.updateScene(whiteboard.scene_id, scene_data)
+    res.json({ success: true, message: 'Scene updated successfully' })
+ } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
+      })
+    }
+    console.error('Error updating scene:', error)
+    res.status(500).json({ error: 'Failed to update scene' })
   }
-  
-  // TODO: Check ownership/permissions
-  
-  whiteboards.splice(whiteboardIndex, 1)
-  res.status(204).send()
+})
+
+// Delete whiteboard
+router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid whiteboard ID' })
+    }
+
+    const deleted = await WhiteboardModel.delete(id, req.user!.id)
+    if (!deleted) {
+      return res.status(404).json({ error: 'Whiteboard not found' })
+    }
+    
+    res.status(204).send()
+  } catch (error) {
+    console.error('Error deleting whiteboard:', error)
+    res.status(500).json({ error: 'Failed to delete whiteboard' })
+  }
 })
 
 export default router

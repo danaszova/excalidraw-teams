@@ -6,9 +6,21 @@ import dotenv from 'dotenv'
 import authRoutes from './routes/auth'
 import whiteboardRoutes from './routes/whiteboards'
 import userRoutes from './routes/users'
+import { connectMongoDB } from './config/database'
 
 // Load environment variables
 dotenv.config()
+
+// Initialize database connections
+const initializeDatabases = async () => {
+  try {
+    await connectMongoDB()
+    console.log('✅ All database connections established')
+  } catch (error) {
+    console.error('❌ Failed to connect to databases:', error)
+    process.exit(1)
+  }
+}
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -47,8 +59,11 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' })
 })
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`)
   console.log(`📊 Health check: http://localhost:${PORT}/health`)
   console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`)
+  
+  // Initialize databases after server starts
+ await initializeDatabases()
 })

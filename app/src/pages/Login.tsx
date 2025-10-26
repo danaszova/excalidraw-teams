@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuthStore } from '../lib/auth-store'
+import { useAuthStore } from '@/lib/auth-store'
 import toast from 'react-hot-toast'
 
 export default function Login() {

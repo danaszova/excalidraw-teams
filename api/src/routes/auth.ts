@@ -1,33 +1,25 @@
 import express from 'express'
-import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
+import { UserModel } from '../models/User'
+import { authenticateToken, AuthRequest } from '../middleware/auth'
 
 const router = express.Router()
 
 // Validation schemas
 const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6)
+ name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters')
 })
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1)
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required')
 })
 
-// Mock user storage (replace with actual database later)
-const users: Array<{
-  id: string
-  name: string
-  email: string
-  password: string
-  createdAt: Date
-}> = []
-
 // Helper function to generate JWT
-const generateToken = (userId: string) => {
+const generateToken = (userId: number) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET || 'dev-secret', {
     expiresIn: '7d'
   })
@@ -39,24 +31,13 @@ router.post('/register', async (req, res) => {
     const { name, email, password } = registerSchema.parse(req.body)
     
     // Check if user already exists
-    const existingUser = users.find(u => u.email === email)
+    const existingUser = await UserModel.findByEmail(email)
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' })
+      return res.status(400).json({ error: 'User with this email already exists' })
     }
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
     
     // Create user
-    const user = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      email,
-      password: hashedPassword,
-      createdAt: new Date()
-    }
-    
-    users.push(user)
+    const user = await UserModel.create({ name, email, password })
     
     // Generate token
     const token = generateToken(user.id)
@@ -71,8 +52,15 @@ router.post('/register', async (req, res) => {
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid input', details: error.errors })
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
+      })
     }
+    console.error('Registration error:', error)
     res.status(500).json({ error: 'Registration failed' })
   }
 })
@@ -83,15 +71,15 @@ router.post('/login', async (req, res) => {
     const { email, password } = loginSchema.parse(req.body)
     
     // Find user
-    const user = users.find(u => u.email === email)
+    const user = await UserModel.findByEmail(email)
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' })
+      return res.status(401).json({ error: 'Invalid email or password' })
     }
     
     // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password)
+    const isValidPassword = await UserModel.verifyPassword(password, user.password_hash)
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' })
+      return res.status(401).json({ error: 'Invalid email or password' })
     }
     
     // Generate token
@@ -107,16 +95,24 @@ router.post('/login', async (req, res) => {
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid input', details: error.errors })
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
+      })
     }
+    console.error('Login error:', error)
     res.status(500).json({ error: 'Login failed' })
-  }
+ }
 })
 
 // Get current user endpoint
-router.get('/me', (req, res) => {
-  // TODO: Add authentication middleware
-  res.json({ message: 'Authentication required' })
+router.get('/me', authenticateToken, (req: AuthRequest, res) => {
+  res.json({
+    user: req.user
+  })
 })
 
 export default router

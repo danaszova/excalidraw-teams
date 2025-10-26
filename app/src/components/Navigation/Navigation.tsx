@@ -9,7 +9,7 @@ import {
   Bars3Icon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
-import { useAuthStore } from '../../lib/auth-store'
+import { useAuthStore } from '@/lib/auth-store'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
