@@ -80,6 +80,8 @@ services:
   # Existing Room Server
   room:
     image: excalidraw/excalidraw-room:sha-49bf529
+    environment:
+      - ENCRYPTION_KEY=22charEncryptionKey!
     ports:
       - "8084:80"
 

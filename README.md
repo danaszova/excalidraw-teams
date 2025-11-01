@@ -1,112 +1,301 @@
-# excalidraw-collaboration
+# 🎨 Team Collaboration Platform with Whiteboard
 
-Demo:
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![React 18](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 
-[demo](https://excalidraw-production-1dbf.up.railway.app) on [Railway](https://railway.app?referralCode=HM_ZCO)
-(Please using the referral code help me get Railway credits to running the demo.)
+> **Production-ready team collaboration platform with real-time whiteboard functionality**
 
-If the demo is down (sometime no free plan credits), you can one click to deploy your excalidraw with collaboration.
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/PjQnHs?referralCode=HM_ZCO&utm_medium=integration&utm_source=template&utm_campaign=generic)
+## 📸 Screenshots
 
-[demo](https://excalidraw.zeabur.app/) on [Zeabur](https://zeabur.com/referral?referralCode=alswl)
-(Please using the referral code help me get Zeabur credits to running the demo.)
+*Coming soon: Screenshots will be added here to showcase the application interface*
 
-Snapshot:
+### 🏠 Dashboard
+<!-- Add dashboard screenshots to screenshots/dashboard/ -->
 
-![snapshot](./_assets/snapshot.png)
+### 🎨 Whiteboard
+<!-- Add whiteboard screenshots to screenshots/whiteboard/ -->
 
-Related docs:
+### 📁 Projects
+<!-- Add project management screenshots to screenshots/projects/ -->
 
-- [Self hosted online collaborative drawing platform Excalidraw | Log4D](https://en.blog.alswl.com/2022/10/self-hosted-excalidraw/)
-- [私有化在线协同画图平台 Excalidraw | Log4D](https://blog.alswl.com/2022/10/self-hosted-excalidraw/)
+### 👥 Team Management
+<!-- Add team management screenshots to screenshots/team/ -->
 
-## Deploy (Basic)
+### 🔐 Authentication
+<!-- Add authentication screenshots to screenshots/auth/ -->
 
-Clone, and run:
+### 📱 Mobile Responsive
+<!-- Add mobile screenshots to screenshots/mobile/ -->
 
-```
-git clone git@github.com:alswl/excalidraw-collaboration.git
-cd excalidraw-collaboration/basic
+## 🚀 Overview
 
-docker-compose up # run the containers
+**Team Collaboration Platform** is a modern, production-ready application that provides teams with powerful collaboration tools including real-time whiteboards, project management, and team organization features. Built with React 18, TypeScript, and Docker, it solves common integration challenges while providing an extensible foundation for your next team app.
 
-open "http://localhost" # open browser, and you can using the collbration functions
-```
+> **Note**: This project was originally forked from [alswl/excalidraw-collaboration](https://github.com/alswl/excalidraw-collaboration) and has been significantly enhanced with production features and React 18 compatibility.
 
-Browse it:
+## ✨ Enhanced Features
 
-- open http://127.0.0.1/ ,and you will see the excalidraw page
-- Click the `Live Collaboration` button, and you will see the collaboration page
-- Now you can share the collaboration page with your friends, and you can draw together.
+### 🎯 What Makes This Version Better
 
-About public network release:
+| Feature | Original | Enhanced Version |
+|---------|----------|------------------|
+| **React Compatibility** | React version conflicts | ✅ **Solved** with smart iframe approach |
+| **Production Ready** | Basic setup | ✅ **Dockerized** with proper architecture |
+| **TypeScript** | Limited | ✅ **Full TypeScript** support |
+| **Error Handling** | Basic | ✅ **Comprehensive** loading states & error handling |
+| **UI/UX** | Functional | ✅ **Modern** design with Tailwind CSS |
+| **Extensibility** | Specific use case | ✅ **Modular** foundation for any team app |
 
-if you want to release your own excalidraw in public network,
-you should modify the `docker-compose.yaml` file,
-Replace the `VITE_APP_HTTP_STORAGE_BACKEND_URL` and `VITE_APP_WS_SERVER_URL` with your own domain.
+### 🛠️ Core Features
 
-## Advanced mode
+- **🎨 Real-time Whiteboards** - Powered by Excalidraw with collaboration
+- **👥 Team Management** - User authentication and team organization  
+- **📁 Project Organization** - Structured project and team management
+- **🚀 Modern Tech Stack** - React 18, TypeScript, Docker, PostgreSQL
+- **📱 Responsive Design** - Works seamlessly on desktop and mobile
+- **🔒 Secure Authentication** - JWT-based user sessions
+- **🐳 Docker First** - Zero-config setup with Docker Compose
 
-### advanced-nginx
-
-Features:
-
-- Setup with one domain, and use nginx to proxy the requests to the backend services
-- HTTPS support
-
-### traefik (not part of this repo)
-
-A configurable docker-compose example for a traefik setup can be found here:
-
-<https://github.com/Someone0nEarth/excalidraw-self-hosted>
-
-
-## Roadmap
-
-- [x] self-host
-- [x] collaboration feature works
-- [x] docker-compose support
-- [x] no pre-build image, dynamic env
-- [x] upload Docker Hub image
-- [ ] S3 storage support
-- [ ] SSO support
-- [x] HTTPS Demo and
-- [x] HTTPS docs
-- [ ] Helm support
-- [x] online demo
-- [x] one click to deploy Railway
-
-## Upgrade Guide
-
-- v0.15.0 -> v0.16.1
-  - replace `REACT_APP_` env with `VITE_APP_`
-
-## Q & A
-
-### How to deploy on the cloud(aws etc)
-
-The `docker-compose.yaml` file is for local deploy, if you want to deploy on the cloud,
-you should prepare 2 Load Balancer(with HTTPS cert), one for websocket server, one for storage server.
-
-The `VITE_APP_HTTP_STORAGE_BACKEND_URL` is for the Load Balancer URL(HTTPS) for storage,
-and the `VITE_APP_WS_SERVER_URL` is for the Load Balancer URL(HTTPS) for websocket.
-
-Here is a conversation about how to deploy on the aws: https://github.com/alswl/excalidraw-collaboration/issues/22
-
-### generateKey problem
-
-Error message:
+## 🏗️ Architecture
 
 ```
-TypeError: Cannot read properties of undefined (reading 'generateKey')
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Frontend      │    │     API          │    │   Database      │
+│                 │    │                  │    │                 │
+│ • React 18      │◄──►│ • Node.js        │◄──►│ • PostgreSQL    │
+│ • TypeScript    │    │ • TypeScript     │    │ • Redis         │
+│ • Vite          │    │ • Express        │    │                 │
+│ • Tailwind CSS  │    │ • JWT Auth       │    └─────────────────┘
+└─────────────────┘    └──────────────────┘
+           │
+           │ Iframe
+           ▼
+┌─────────────────┐
+│   Excalidraw    │
+│                 │
+│ • Local         │
+│ • No React      │
+│   Conflicts     │
+└─────────────────┘
 ```
 
-Why: The excalidraw is using crypto module of Javascript, the HTTPS is required.
+## 🚀 Quick Start
 
-How to solve: use HTTPS to access the page, or use http://localhost instead.
+Get started in under 5 minutes with our Docker-first setup:
 
-## Contributors
+### Prerequisites
+- Docker and Docker Compose
+- Git
 
-<a href="https://github.com/alswl/excalidraw-collaboration/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=alswl/excalidraw-collaboration" />
-</a>
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/team-collaboration-platform.git
+   cd team-collaboration-platform
+   ```
+
+2. **Start the application**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Access the application**
+   - Frontend: http://localhost:3000
+   - Excalidraw: http://localhost:8080
+   - API: http://localhost:3001
+
+4. **Create your first whiteboard**
+   - Login with the default credentials
+   - Navigate to the whiteboard section
+   - Start collaborating in real-time!
+
+### Default Credentials
+- **Username**: `admin`
+- **Password**: `password`
+
+## 🛠️ Development
+
+### Local Development Setup
+
+1. **Install dependencies**
+   ```bash
+   cd app && yarn install
+   cd ../api && npm install
+   ```
+
+2. **Start development servers**
+   ```bash
+   # Frontend (app)
+   cd app && yarn dev
+
+   # Backend (api) 
+   cd api && npm run dev
+   ```
+
+3. **Environment Configuration**
+   Copy the example environment files and configure as needed:
+   ```bash
+   cp api/.env.example api/.env
+   ```
+
+## 🎨 Customization
+
+### Adding New Features
+
+The modular architecture makes it easy to extend:
+
+```typescript
+// Example: Adding a new page
+// app/src/pages/NewFeature.tsx
+import React from 'react';
+
+const NewFeature: React.FC = () => {
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Your New Feature</h1>
+      {/* Your component content */}
+    </div>
+  );
+};
+
+export default NewFeature;
+```
+
+### Whiteboard Integration
+
+Our smart iframe approach eliminates React version conflicts:
+
+```typescript
+// app/src/components/WhiteboardEmbed/WhiteboardEmbed.tsx
+const WhiteboardEmbed: React.FC<WhiteboardEmbedProps> = () => {
+  // Simple iframe integration - no React conflicts!
+  return <iframe src="http://localhost:8080" />;
+};
+```
+
+## 📚 API Documentation
+
+### Authentication Endpoints
+
+```bash
+# Login
+POST /api/auth/login
+{
+  "username": "admin",
+  "password": "password"
+}
+
+# Get current user
+GET /api/auth/me
+```
+
+### Whiteboard Endpoints
+
+```bash
+# Create whiteboard
+POST /api/whiteboards
+{
+  "name": "Project Planning",
+  "description": "Team brainstorming session"
+}
+
+# Get whiteboard
+GET /api/whiteboards/:id
+
+# Update whiteboard scene
+PUT /api/whiteboards/:id/scene
+{
+  "sceneData": { ... }
+}
+```
+
+## 🤝 Contributing
+
+We love contributions! Here's how you can help:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit your changes**: `git commit -m 'Add amazing feature'`
+4. **Push to the branch**: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**
+
+### Development Guidelines
+- Follow TypeScript best practices
+- Include proper error handling
+- Add tests for new features
+- Update documentation
+- Ensure Docker compatibility
+
+## 🎯 Use Cases
+
+### Perfect For:
+- **Remote Teams** - Real-time collaboration from anywhere
+- **Project Planning** - Visual brainstorming and planning sessions
+- **Education** - Interactive learning environments
+- **Design Teams** - Quick mockups and wireframing
+- **Startups** - Rapid prototyping and team coordination
+
+### Customization Ideas:
+- Add video conferencing integration
+- Implement file uploads and sharing
+- Create custom whiteboard templates
+- Add user roles and permissions
+- Integrate with project management tools
+
+## 🗺️ Roadmap
+
+### Coming Soon
+- [ ] Real-time chat integration
+- [ ] File upload and sharing
+- [ ] User roles and permissions
+- [ ] Whiteboard templates
+- [ ] Export functionality (PNG, PDF)
+- [ ] Mobile app
+
+### Community Requests
+Have an idea? [Open an issue](https://github.com/your-username/team-collaboration-platform/issues) and let us know!
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Whiteboard not loading?**
+- Ensure Excalidraw container is running on port 8080
+- Check browser console for errors
+- Verify Docker containers are healthy
+
+**Authentication issues?**
+- Check database connectivity
+- Verify JWT secret configuration
+- Clear browser storage and retry
+
+**Need help?**
+- Check [existing issues](https://github.com/your-username/team-collaboration-platform/issues)
+- Create a new issue with details
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Original project: [alswl/excalidraw-collaboration](https://github.com/alswl/excalidraw-collaboration)
+- [Excalidraw](https://excalidraw.com/) for the amazing whiteboard functionality
+- The open source community for invaluable contributions
+
+---
+
+**Ready to build your next team collaboration app?** 
+
+⭐ **Star this repo** if you found it helpful!
+
+🐛 **Found a bug?** [Open an issue](https://github.com/your-username/team-collaboration-platform/issues)
+
+💡 **Have an idea?** We'd love to hear it!
+
+---
+
+*Built with ❤️ for the open source community*
